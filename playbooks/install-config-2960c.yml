@@ -1,0 +1,72 @@
+---
+- name: Verwalte Cisco IOS Switches
+  hosts: all
+  gather_facts: yes
+  connection: ansible.netcommon.network_cli
+  vars:
+    ansible_network_os: cisco.ios.ios
+    ansible_become: no
+    ansible_ssh_pass: SuperSecretkey2012
+
+  tasks:
+    - name: Konfiguriere den Hostnamen
+      ios_config:
+        lines:
+          - hostname {{ hostname }}
+
+    - name: Konfiguriere Gateway
+      ios_config:
+        lines:
+          - ip default-gateway {{ gateway }}
+
+    - name: Konfiguriere Standardeinstellungen
+      ios_config:
+        lines:
+          - ip domain-name local
+          #- no ip name-server
+          - ip name-server {{ dns1 }}
+          - ip name-server {{ dns2 }}
+          - no vtp mode transparent
+          - ip domain-lookup
+          #- no ntp
+          - ntp server {{ ntp1 }} prefer
+          - ntp server {{ ntp2 }}
+          #- no snmp-server
+          - snmp-server community StBVREAD RO
+          - snmp-server contact iuk@stbawm.bayern.de
+          - no snmp-server system-shutdown
+          - no ip http server
+          - no ip http secure-server
+          - no ip http authentication aaa
+          #- no errdisable recovery cause all
+          - errdisable recovery cause bpduguard
+          - errdisable recovery cause link-flap
+
+
+    - name: Konfiguriere Ports 4-12
+      ios_config:
+        lines:
+          - interface range fastEthernet0/4 - 12
+          - description Client-Port
+          - switchport mode access
+          - no spanning-tree bpduguard disable
+          - logging event link-status
+          - snmp trap link-status
+          - no spanning-tree portfast
+          #- no ip dhcp snooping trust
+          # Fügen Sie weitere Konfiguration für die Ports hinzu
+
+    - name: Zeige Inventardaten des Switches
+      debug:
+        var: ansible_facts  # Dies gibt alle Inventardaten für den Host aus
+
+    - name: Check the startup-config against the running-config
+      cisco.ios.ios_config:
+        diff_against: startup
+        diff_ignore_lines:
+          - ntp clock .*
+
+    - name: Save running to startup when modified
+      cisco.ios.ios_config:
+        save_when: modified
+
