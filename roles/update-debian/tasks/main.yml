@@ -1,0 +1,18 @@
+- name: Aktualisiere alle Paketquellen
+  ansible.builtin.apt:
+    update_cache: yes
+    cache_valid_time: 3600 # Cache für eine Stunde gültig
+
+- name: Führe ein vollständiges Systemupdate durch
+  ansible.builtin.apt:
+    upgrade: dist
+    update_cache: yes
+
+- name: Überprüfe, ob ein Neustart erforderlich ist
+  ansible.builtin.stat:
+    path: /var/run/reboot-required
+  register: reboot_required
+
+- name: Starte das System neu, wenn erforderlich
+  ansible.builtin.reboot:
+  when: reboot_required.stat.exists
