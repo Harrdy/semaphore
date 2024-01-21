@@ -32,8 +32,6 @@
           - ntp server {{ ntp1 }} prefer
           - ntp server {{ ntp2 }}
           #- no snmp-server
-          - snmp-server community StBVREAD RO
-          - snmp-server contact iuk@stbawm.bayern.de
           - no snmp-server system-shutdown
           - no ip http server
           - no ip http secure-server
